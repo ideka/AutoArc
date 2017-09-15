@@ -1,0 +1,7 @@
+*.suo
+*.user
+*.cachefile
+.vs
+bin
+obj
+packages
