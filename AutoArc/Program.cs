@@ -7,29 +7,35 @@ using System.Linq;
 
 namespace AutoArc
 {
-    public class Download
+    public class Program
     {
-        public static string OldSuffix = ".old";
+        public const string OldSuffix = ".old";
+        public const string ChecksumSuffix = ".md5sum";
 
-        public string Source { get; private set; }
-        public string Name { get; private set; }
-        public string ChecksumName { get; private set; }
+        public const string RemotePath = "https://www.deltaconnected.com/arcdps/x64/";
+        public const string LocalPath = "bin64/";
 
-        public Download(string source, string name, string checksumName = null)
+        public const string GameExeName = "Gw2-64.exe";
+
+        private static void Main(string[] args)
         {
-            this.Source = source;
-            this.Name = name;
-            this.ChecksumName = checksumName;
+            Download(RemotePath, LocalPath, "d3d9.dll", true);
+            Download(RemotePath + "buildtemplates/", LocalPath, "d3d9_arcdps_buildtemplates.dll", false);
+
+            if (args.Any())
+                Process.Start(GameExeName, args.Last());
+            else
+                Process.Start(GameExeName);
         }
 
-        public void Perform(string targetPath)
+        private static void Download(string remotePath, string localPath, string name, bool hasChecksum)
         {
-            Console.WriteLine("Checking for {0} updates...", this.Name);
+            Console.WriteLine("Checking for {0} updates...", name);
 
             {
-                HttpWebResponse resp = (HttpWebResponse)WebRequest.Create(this.Source + this.Name).GetResponse();
+                HttpWebResponse resp = (HttpWebResponse)WebRequest.Create(remotePath + name).GetResponse();
 
-                if (File.Exists(targetPath + this.Name) && File.GetLastWriteTimeUtc(targetPath + this.Name) >= resp.LastModified)
+                if (File.Exists(localPath + name) && File.GetLastWriteTimeUtc(localPath + name) >= resp.LastModified)
                 {
                     Console.WriteLine("Up to date ({0}).", resp.LastModified);
                     return;
@@ -39,19 +45,19 @@ namespace AutoArc
                 resp.Close();
             }
 
-            if (File.Exists(targetPath + this.Name))
-                File.Copy(targetPath + this.Name, targetPath + this.Name + OldSuffix, true);
+            if (File.Exists(localPath + name))
+                File.Copy(localPath + name, localPath + name + OldSuffix, true);
 
             byte[] file;
             using (WebClient wc = new WebClient())
             {
-                file = wc.DownloadData(this.Source + this.Name);
+                file = wc.DownloadData(remotePath + name);
 
-                if (this.ChecksumName != null)
+                if (hasChecksum)
                 {
                     using (MD5 md5 = MD5.Create())
                     {
-                        string checksum = wc.DownloadString(this.Source + this.ChecksumName).Split(' ')[0];
+                        string checksum = wc.DownloadString(remotePath + name + ChecksumSuffix).Split(' ')[0];
                         string downloadChecksum = BitConverter.ToString(md5.ComputeHash(file)).Replace("-", "").ToLower();
                         bool equal = checksum == downloadChecksum;
                         Console.WriteLine("{0} == {1} ({2})", checksum, downloadChecksum, equal);
@@ -68,78 +74,7 @@ namespace AutoArc
                 }
             }
 
-            File.WriteAllBytes(targetPath + this.Name, file);
-        }
-    }
-
-    public class Program
-    {
-        public const string DllLocalLocation = "bin64/";
-        public const string GameExeName = "Gw2-64.exe";
-
-        public const string Source = "https://www.deltaconnected.com/arcdps/x64/";
-        public const string DllName = "d3d9.dll";
-        public const string ChecksumName = "d3d9.dll.md5sum";
-
-        public const string DllOldName = "d3d9.dll.old";
-
-        private static void Main(string[] args)
-        {
-            //UpdateArc();
-            new Download(Source, "d3d9.dll", "d3d9.dll.md5sum").Perform(DllLocalLocation);
-            new Download(Source + "buildtemplates/", "d3d9_arcdps_buildtemplates.dll").Perform(DllLocalLocation);
-
-            if (args.Any())
-                Process.Start(GameExeName, args.Last());
-            else
-                Process.Start(GameExeName);
-        }
-
-        private static void UpdateArc()
-        {
-            {
-                HttpWebResponse resp = (HttpWebResponse)WebRequest.Create(Source + ChecksumName).GetResponse();
-
-#if !DEBUG
-                if (File.Exists(DllLocalLocation + DllName) && File.GetLastWriteTimeUtc(DllLocalLocation + DllName) >= resp.LastModified)
-                {
-                    Console.WriteLine("Up to date ({0}).", resp.LastModified);
-                    return;
-                }
-#endif
-
-                Console.WriteLine("Downloading update ({0})...", resp.LastModified);
-                resp.Close();
-            }
-
-#if !DEBUG
-            if (File.Exists(DllLocalLocation + DllName))
-                File.Copy(DllLocalLocation + DllName, DllLocalLocation + DllOldName, true);
-#endif
-
-            byte[] dll;
-            using (WebClient wc = new WebClient())
-            using (MD5 md5 = MD5.Create())
-            {
-                string checksum = wc.DownloadString(Source + ChecksumName).Split(' ')[0];
-
-                dll = wc.DownloadData(Source + DllName);
-                string downloadChecksum = BitConverter.ToString(md5.ComputeHash(dll)).Replace("-", "").ToLower();
-
-                bool equal = checksum == downloadChecksum;
-                Console.WriteLine("{0} == {1} ({2})", checksum, downloadChecksum, equal);
-                if (!equal)
-                {
-#if !DEBUG
-                    Console.ReadKey();
-#endif
-                    return;
-                }
-            }
-
-#if !DEBUG
-            File.WriteAllBytes(DllLocalLocation + DllName, dll);
-#endif
+            File.WriteAllBytes(localPath + name, file);
         }
     }
 }
