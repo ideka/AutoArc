@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoArc", "AutoArc\AutoArc.csproj", "{04BAE35E-8746-4C05-9011-3A60440A3BAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoArc", "AutoArc.csproj", "{04BAE35E-8746-4C05-9011-3A60440A3BAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A51829DF-0886-4091-939D-7DACF67C0E17}
 	EndGlobalSection
 EndGlobal

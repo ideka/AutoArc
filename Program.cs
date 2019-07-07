@@ -40,6 +40,5 @@ namespace AutoArc
             else
                 Process.Start(GameExeName);
         }
-
     }
 }
